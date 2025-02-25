@@ -32,7 +32,7 @@ export default function Contacts() {
       <h3>details</h3>
       <ul className="opacity-70">
         <li className="sensitive">
-            his/him; bi
+            he/him; bi
         </li>
         <li>
             lang: english, korean

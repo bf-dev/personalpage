@@ -1,10 +1,3 @@
-import {
-  ChatContainer,
-  ChatMessage,
-  ChatMessageProvider,
-  MessagePosition,
-  ChatMessageData,
-} from "@/components/ChatMessage";
 import ChatInteraction from "./ChatInteraction";
 import Background from "./Background";
 export default function Home() {

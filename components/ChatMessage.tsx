@@ -207,7 +207,6 @@ export function ChatMessageProvider({
     // Determine if we're adding new messages or loading initial messages
     const messageCount = messagesWithIds.length;
     const isInitialLoad = prevMessageCount === 0;
-    const isAddingMessages = messageCount > prevMessageCount;
     const isRemovingMessages = messageCount < prevMessageCount;
     
     // Update previous message count for next comparison
@@ -245,7 +244,7 @@ export function ChatMessageProvider({
     return () => {
       timers.forEach((timer) => clearTimeout(timer));
     };
-  }, [messagesWithIds, delay, typeDelays, animated]);
+  }, [messagesWithIds, delay, typeDelays, animated, prevMessageCount, visibleCount]);
 
   // Get only the visible messages
   const visibleMessages = messagesWithIds.slice(0, visibleCount);

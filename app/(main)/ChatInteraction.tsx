@@ -1,11 +1,10 @@
 "use client";
 import {
-  ChatMessage,
   ChatMessageData,
   ChatMessageProvider,
 } from "@/components/ChatMessage";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 // Extended type to include button options
 interface ChatMessageWithButtons extends ChatMessageData {
@@ -18,8 +17,8 @@ export default function ChatInteraction() {
   const [referrer, setReferrer] = useState<string | null>(null);
   const router = useRouter();
   
-  // Function to handle button clicks
-  const handleButtonClick = (buttonText: string) => {
+  // Function to handle button clicks - wrapped in useCallback
+  const handleButtonClick = useCallback((buttonText: string) => {
     // For navigation buttons, navigate directly without adding response
     if (buttonText === "Contact Me") {
       router.push("/about");
@@ -78,7 +77,7 @@ export default function ChatInteraction() {
         }, 1000);
       }
     
-  };
+  }, [router, setMessages]);
   
   // First useEffect to detect referrer from URL hash
   useEffect(() => {
@@ -140,7 +139,7 @@ export default function ChatInteraction() {
     );
 
     setMessages(initialMessages);
-  }, [referrer]); // Re-run when referrer changes
+  }, [referrer, handleButtonClick]); // Added handleButtonClick as a dependency
 
   return (
     <div>

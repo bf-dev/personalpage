@@ -84,10 +84,10 @@ export default function ChatInteraction() {
     // Check for hash in URL (e.g., #instagram)
     const hash = window.location.hash.slice(1);
     const referrers: Record<string, string> = {
-      instagram: "Instagram",
-      github: "GitHub",
-      linkedin: "LinkedIn",
-      twitter: "Twitter",
+      i: "Instagram",
+      g: "GitHub",
+      t: "Telegram",
+      d: "Discord",
       // Add more platforms as needed
     };
 

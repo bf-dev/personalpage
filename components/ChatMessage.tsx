@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 
 export type MessagePosition = "first" | "middle" | "last" | "single";
 export type MessageSide = "left" | "right" | "timestamp";
@@ -189,6 +189,14 @@ export function ChatMessageProvider({
   
   // Track the previous message count to detect new messages
   const [prevMessageCount, setPrevMessageCount] = useState(0);
+  
+  // Use a ref to track the current visible count without creating a dependency
+  const visibleCountRef = useRef(visibleCount);
+  
+  // Update the ref whenever visibleCount changes
+  useEffect(() => {
+    visibleCountRef.current = visibleCount;
+  }, [visibleCount]);
 
   // Add stable IDs to messages for React keys
   const messagesWithIds = useMemo(
@@ -222,8 +230,8 @@ export function ChatMessageProvider({
     const timers: NodeJS.Timeout[] = [];
     let cumulativeDelay = 0;
     
-    // Only animate new messages
-    const startIndex = isInitialLoad ? 0 : visibleCount;
+    // Only animate new messages - use the ref value
+    const startIndex = isInitialLoad ? 0 : visibleCountRef.current;
     
     for (let i = startIndex; i < messageCount; i++) {
       // Use custom delay for this message type if provided, otherwise use default
@@ -244,7 +252,7 @@ export function ChatMessageProvider({
     return () => {
       timers.forEach((timer) => clearTimeout(timer));
     };
-  }, [messagesWithIds, delay, typeDelays, animated, prevMessageCount, visibleCount]);
+  }, [messagesWithIds, delay, typeDelays, animated, prevMessageCount]);
 
   // Get only the visible messages
   const visibleMessages = messagesWithIds.slice(0, visibleCount);

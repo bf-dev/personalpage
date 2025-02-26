@@ -13,37 +13,37 @@ export default function ContactsList() {
   const contacts: ContactItem[] = [
     {
       icon: <Mail size={16} />,
-      label: 'Email',
+      label: 'email',
       handle: 'bfdev+pub@icloud.com',
       href: 'mailto:bfdev+pub@icloud.com'
     },
     {
       icon: <Github size={16} />,
-      label: 'GitHub',
+      label: 'github',
       handle: 'bf-dev',
       href: 'https://github.com/bf-dev'
     },
     {
       icon: <Instagram size={16} />,
-      label: 'Instagram',
+      label: 'instagram',
       handle: '@seonign',
       href: 'https://instagram.com/seonign'
     },
     {
       icon: <Globe size={16} />,
-      label: 'Website',
+      label: 'website',
       handle: 'neowiki.one',
       href: 'https://neowiki.one'
     },
     {
       icon: <Send size={16} />,
-      label: 'Telegram',
+      label: 'telegram',
       handle: '@bfdevtg',
       href: 'https://t.me/bfdevtg'
     },
     {
       icon: <MessageCircle size={16} />,
-      label: 'Discord',
+      label: 'discord',
       handle: '@klyxxor',
       href: 'https://discord.com/users/klyxxor'
     }

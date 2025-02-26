@@ -2,8 +2,6 @@ import ChatInteraction from './ChatInteraction';
 import Background from './Background';
 import VisitLogger from './VisitLogger';
 
-'use client';
-
 export default function Home() {
 	return (
 		<div className="relative bg-gray">

@@ -38,7 +38,7 @@ export default function Contacts() {
             english, korean
         </li>
         <li>
-            tz: utc+8
+            utc+8
         </li>
       </ul>
       <ContactsList />

@@ -131,7 +131,7 @@ export function ChatMessage({
             <motion.button
               key={index}
               onClick={() => onButtonClick && onButtonClick(button)}
-              className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 rounded-2xl text-sm text-zinc-200 text-left transition-colors self-start inline-block w-auto"
+              className="px-4 py-2 bg-zinc-900 text-xs hover:bg-zinc-800 rounded-2xl text-sm text-zinc-200 text-left transition-colors self-start inline-block w-auto"
               initial={{ opacity: 0, y: 10, scale: 0.95 }}
               animate={{ 
                 opacity: 1, 

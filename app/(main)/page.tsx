@@ -1,11 +1,13 @@
 import ChatInteraction from './ChatInteraction';
 import Background from './Background';
-export default function Home() {
-	// Sample data for chat messages
+import VisitLogger from './VisitLogger';
 
+'use client';
+
+export default function Home() {
 	return (
 		<div className="relative bg-gray">
-			{/* Floating background with letters and emojis */}
+			<VisitLogger />
 			<Background />
 
 			<div className="relative p-5 container bg-black mx-auto max-w-xl min-h-screen text-white z-10">

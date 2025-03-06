@@ -135,7 +135,10 @@ export default function DesktopWindow({
                     <div className={`h-1 transition-all mt-1 bg-white/20 rounded-full ${preClose ? "w-4" : preMaximize ? "w-16" : "w-8"} `} />
                     <AnimatePresence>
                         {preClose && (
-                            <motion.p className="text-white/20 text-xs mt-0.5" initial={{y: -10, opacity: 0, height: 0}} animate={{y: 0, opacity: 1, height: "auto"}} exit={{y: -10, opacity: 0, height: 0}}>Release to close</motion.p>
+                            <motion.p className="text-white/20 text-xs mt-0.5" initial={{y: -10, opacity: 0, height: 0}} animate={{y: 0, opacity: 1, height: "auto"}} exit={{y: -10, opacity: 0, height: 0}}>
+
+                                {isMaximized ? "Release to exit full screen" : "Release to close"}
+                            </motion.p>
                         )}
                         {preMaximize && (
                             <motion.p className="text-white/20 text-xs mt-0.5" initial={{y: -10, opacity: 0, height: 0}} animate={{y: 0, opacity: 1, height: "auto"}} exit={{y: -10, opacity: 0, height: 0}}>Release to maximize</motion.p>

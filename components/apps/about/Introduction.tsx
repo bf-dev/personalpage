@@ -13,9 +13,9 @@ const Introduction: React.FC = () => {
 		{
 			title: 'what-i-like',
 			items: [
-				'programming; made 20+ projects in 8 years',
+				'programming;',
 				'music; fav: @nemothings',
-				'literature; video gaming;'
+				'video gaming;'
 			]
 		},
 		{

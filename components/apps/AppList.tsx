@@ -3,6 +3,7 @@ import About from "./about/About";
 import ChatInteraction from "./chat/Chat";
 import Calculator from "./calculator/Calculator";
 import Image from "next/image";
+import Typewriter from "./typewriter/Typewriter";
 type MenuDefinition = {
     id: string;
     title: string;
@@ -36,6 +37,30 @@ export const AppList: AppDefinition[] = [
         )
     },
     {
+        id: "kitten",
+        title: "Kitten",
+        icon: "Cat",
+        width: 768 / 3,
+        height: 1024 / 3 + 24,
+        component: (
+            <div className="text-white w-full h-[341.33px] mt-[6px]">
+                <Image src="/kitten.jpeg" alt="kitten" height={1024 / 3} width={768 / 3} />
+            </div>
+        )
+    },
+    {
+        id: "calculator",
+        title: "Calculator",
+        icon: "Calculator",
+        width: 320,
+        height: 480,
+        component: (
+            <div className="text-white h-full">
+                <Calculator />
+            </div>
+        )
+    },
+    {
         id: "flag",
         title: "Flag",
         icon: "FlagIcon",
@@ -50,26 +75,28 @@ export const AppList: AppDefinition[] = [
         )
     },
     {
-        id: "kitten",
-        title: "Kitten",
-        icon: "Cat",
-        width: 768/3,
-        height: 1024/3+24,
-        component: (
-            <div className="text-white w-full h-[341.33px] mt-[6px]">
-                <Image src="/kitten.jpeg" alt="kitten" height={1024/3} width={768/3} />
-            </div>
-        )
+        id: "typewriter",
+        title: "Typewriter",
+        icon: "Keyboard",
+        width: 720,
+        height: 320,
+        component: <Typewriter />
     },
     {
-        id: "calculator",
-        title: "Calculator",
-        icon: "Calculator",
+        id: "thoughts",
+        title: "Thoughts",
+        icon: "TreePalm",
         width: 320,
         height: 480,
         component: (
-            <div className="text-white h-full">
-                <Calculator />
+            <div className="text-white h-full w-full px-4 pt-2">
+                <h3 className="text-lg font-semibold">Thoughts</h3>
+                <div className="flex flex-col gap-y-2 py-2">
+                    <div className="bg-black/30 p-2 rounded-md">
+                        <p className="">Working in Progress</p>
+                        <p className="text-sm text-white/50">I'm working on it!</p>
+                    </div>
+                </div>
             </div>
         )
     }

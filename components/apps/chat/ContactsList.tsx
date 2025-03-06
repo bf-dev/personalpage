@@ -1,7 +1,7 @@
 import React from 'react';
 import { Mail, Github, Globe, MessageCircle, Send, Instagram } from 'lucide-react';
 import Link from 'next/link';
-import { AnimatedItem } from './AnimatedItem';
+import { AnimatedItem } from '../../AnimatedItem';
 
 interface ContactItem {
 	icon: React.ReactNode;

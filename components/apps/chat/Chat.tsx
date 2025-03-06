@@ -1,5 +1,5 @@
 'use client';
-import { ChatMessageData, ChatMessageProvider } from '@/components/ChatMessage';
+import { ChatMessageData, ChatMessageProvider } from '@/components/apps/chat/ChatMessage';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
 
@@ -10,6 +10,7 @@ interface ChatMessageWithButtons extends ChatMessageData {
 }
 
 export default function ChatInteraction() {
+
 	const [messages, setMessages] = useState<ChatMessageWithButtons[]>([]);
 	const [referrer, setReferrer] = useState<string | null>(null);
 	const router = useRouter();
@@ -18,15 +19,6 @@ export default function ChatInteraction() {
 	const handleButtonClick = useCallback(
 		(buttonText: string) => {
 			// For navigation buttons, navigate directly without adding response
-			if (buttonText === 'Contact Me') {
-				router.push('/about');
-				return;
-			}
-
-			if (buttonText === 'Explore Playground') {
-				router.push('/playground');
-				return;
-			}
 
 			// For other buttons, add user selection to chat
 			setMessages(prev => {
@@ -51,8 +43,7 @@ export default function ChatInteraction() {
 							{
 								content:
 									"I'm Insung Cho, a creator of this website. I'm passionate about building meaningful experiences and connecting with people. Thanks for visiting my personal site!",
-								side: 'left',
-								buttons: ['Contact Me', 'Explore Playground'],
+								side: 'left'
 							},
 						];
 					});
@@ -126,7 +117,7 @@ export default function ChatInteraction() {
 			{
 				content: 'Welcome to my personal site! How can I help you today?',
 				side: 'left',
-				buttons: ['Who are you?', 'Contact Me', 'Explore Playground', '한국어?'],
+				buttons: ['Who are you?', '한국어?'],
 				onButtonClick: handleButtonClick,
 			}
 		);

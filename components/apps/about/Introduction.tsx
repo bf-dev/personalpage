@@ -19,9 +19,9 @@ const Introduction: React.FC = () => {
 			]
 		},
 		{
-			title: 'details',
+			title: 'communicate',
 			items: [
-				'he/him; b',
+				'he/him',
 				'english, korean',
 				'utc+8'
 			]

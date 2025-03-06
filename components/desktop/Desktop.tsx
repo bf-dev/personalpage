@@ -202,9 +202,7 @@ export default function Desktop({ preloadApp }: DesktopProps) {
                 className="absolute right-5 text-sm rounded-sm top-10 bg-black/10 backdrop-blur-lg text-white/80 p-2"
 
             >
-                <strong>drag top</strong> to maximize window
-                <br />
-                <strong>drag bottom</strong> to close window
+                Drag the window to the top edge to maximize it, or to the bottom edge to close it.
             </motion.div>
             <motion.div
                 initial={{ opacity: 0, y: 10 }}

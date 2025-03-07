@@ -2,6 +2,7 @@
 import { ChatMessageData, ChatMessageProvider } from '@/components/apps/chat/ChatMessage';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
+import { AppContext, AppProps } from '../AppList';
 
 // Extended type to include button options
 interface ChatMessageWithButtons extends ChatMessageData {
@@ -9,11 +10,28 @@ interface ChatMessageWithButtons extends ChatMessageData {
 	onButtonClick?: (buttonText: string) => void;
 }
 
-export default function ChatInteraction() {
-
+export default function ChatInteraction({ context, onLaunchApp }: AppProps) {
 	const [messages, setMessages] = useState<ChatMessageWithButtons[]>([]);
 	const [referrer, setReferrer] = useState<string | null>(null);
 	const router = useRouter();
+
+	// Process incoming context if provided
+	useEffect(() => {
+		if (context && context.data) {
+			// Add a message to show the incoming context data
+			setTimeout(() => {
+				setMessages(prev => {
+					return [
+						...prev,
+						{
+							content: `Received data from ${context.source}: ${JSON.stringify(context.data)}`,
+							side: 'left'
+						}
+					];
+				});
+			}, 1000);
+		}
+	}, [context]);
 
 	// Function to handle button clicks - wrapped in useCallback
 	const handleButtonClick = useCallback(
@@ -64,8 +82,32 @@ export default function ChatInteraction() {
 					});
 				}, 1000);
 			}
+
+			// Handle "Open calculator" button
+			if (buttonText === 'Open Calculator') {
+				// Launch calculator app with context data
+				if (onLaunchApp) {
+					onLaunchApp('calculator', true, {
+						data: { calculatorMode: 'standard' },
+						source: 'chat',
+						timestamp: Date.now()
+					});
+				}
+			}
+
+			// Handle "Open typewriter" button
+			if (buttonText === 'Open Typewriter') {
+				// Launch typewriter app with context data
+				if (onLaunchApp) {
+					onLaunchApp('typewriter', true, {
+						data: { initialText: 'Launched from chat app!' },
+						source: 'chat',
+						timestamp: Date.now()
+					});
+				}
+			}
 		},
-		[router, setMessages]
+		[router, setMessages, onLaunchApp]
 	);
 
 	// First useEffect to detect referrer from URL hash
@@ -117,7 +159,7 @@ export default function ChatInteraction() {
 			{
 				content: 'Welcome to my personal site! How can I help you today?',
 				side: 'left',
-				buttons: ['Who are you?', '한국어?'],
+				buttons: ['Who are you?', '한국어?', 'Open Calculator', 'Open Typewriter'],
 				onButtonClick: handleButtonClick,
 			}
 		);

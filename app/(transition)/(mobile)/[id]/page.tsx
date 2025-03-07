@@ -1,23 +1,39 @@
+"use client";
+
 import { AppList } from "@/components/apps/AppList";
-import { notFound } from "next/navigation";
+import { notFound, useParams, useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { useAppContext } from "@/components/hooks/useAppContext";
 
-export function generateStaticParams() {
-    return AppList.map(app => ({
-        id: app.id
-    }));
-}
-
-export default async function AppPage({ params }: { params: Promise<{ id: string }> }) {
-    const appId = (await params).id;
+export default function AppPage() {
+    const router = useRouter();
+    const appId = useParams().id as string | undefined;
+    if (!appId) {
+        return notFound();
+    }
+    
+    // Use our custom hook to manage context
+    const { context, createLaunchAppHandler } = useAppContext(appId);
+    
     const selectedApp = AppList.find(app => app.id === appId);
 
     if (!selectedApp) {
         return notFound();
     }
 
+    // Create the mobile-friendly launch app handler
+    const handleLaunchApp = createLaunchAppHandler(router);
+
+    // Create props object for the app component
+    const appProps = {
+        context,
+        onLaunchApp: handleLaunchApp,
+        onClose: () => router.push('/')
+    };
+
     return (
         <>
-            {selectedApp.component}
-        </>
+            {selectedApp.getComponent(appProps)}
+            </>
     );
 }

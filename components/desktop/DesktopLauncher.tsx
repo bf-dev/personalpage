@@ -1,25 +1,21 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import * as LucideIcons from 'lucide-react';
+import { AppDefinition, AppContext } from '../apps/AppList';
 
 // Define available applications
-export interface AppDefinition {
-  id: string;
-  title: string;
-  icon: keyof typeof LucideIcons;
-  component: React.ReactNode;
-  width?: number;  // Optional width with default value applied in the Desktop component
-  height?: number; // Optional height with default value applied in the Desktop component
-}
 
 interface DesktopLauncherProps {
   apps: AppDefinition[];
   launchedApps: string[];
-  onLaunchApp: (appId: string) => void;
+  onLaunchApp: (appId: string, centerPosition?: boolean, context?: AppContext, isPreload?: boolean) => void;
   startupPhase: 'initial' | 'background' | 'launcher' | 'complete';
 }
 
 export default function DesktopLauncher({ apps, launchedApps, onLaunchApp, startupPhase }: DesktopLauncherProps) {
+  // Filter visible apps - only display non-hidden apps or already launched apps
+  const visibleApps = apps.filter(app => !app.isHidden || launchedApps.includes(app.id));
+  
   return (
     <div className="fixed bottom-0 left-0 w-full flex justify-center items-center pb-4 pointer-events-none">
       <motion.div 
@@ -37,10 +33,9 @@ export default function DesktopLauncher({ apps, launchedApps, onLaunchApp, start
         }}
       >
         <div className="flex space-x-4">
-          {apps.map((app) => {
+          {visibleApps.map((app) => {
             const Icon = LucideIcons[app.icon];
             const isLaunched = launchedApps.includes(app.id);
-            
             return (
               <motion.button
                 key={app.id}

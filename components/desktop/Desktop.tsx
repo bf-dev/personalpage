@@ -2,12 +2,13 @@
 import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import DesktopWindow from "./DesktopWindow";
-import DesktopLauncher, { AppDefinition } from "./DesktopLauncher";
-import { Code, FileText, Terminal, Settings } from "lucide-react";
+import DesktopLauncher from "./DesktopLauncher";
 import DesktopStatus from "./DesktopStatus";
-import ChatInteraction from "@/components/apps/chat/Chat";
 import { AppList } from "@/components/apps/AppList";
 import { useRouter } from "next/navigation";
+import DesktopFile from "./DesktopFile";
+import type { AppContext } from "@/components/apps/AppList";
+
 // Define the window interface with additional properties for focus and animations
 interface WindowInstance {
     id: string;
@@ -22,19 +23,21 @@ interface WindowInstance {
     width: number;
     height: number;
     isPreloadApp: boolean;
+    // Add context for inter-app communication
+    context?: AppContext;
 }
 
 interface DesktopProps {
     preloadApp?: string; // Optional prop to preload an app on component mount
+    initialContext?: AppContext; // Optional initial context for the preloaded app
 }
 
-export default function Desktop({ preloadApp }: DesktopProps) {
+export default function Desktop({ preloadApp, initialContext }: DesktopProps) {
     const router = useRouter();
     const [screenDimensions, setScreenDimensions] = useState({
         width: typeof window !== 'undefined' ? window.innerWidth : 1200,
         height: typeof window !== 'undefined' ? window.innerHeight : 800,
     });
-
 
     // Define available apps
     const availableApps = AppList;
@@ -92,16 +95,31 @@ export default function Desktop({ preloadApp }: DesktopProps) {
     }, []);
 
     // Handle launching an app
-    const handleLaunchApp = (appId: string, centerPosition: boolean = false, isPreload: boolean = false) => {
-        // Check if app is already launched
-        if (launchedAppIds.includes(appId)) {
-            // Focus the existing window
-            focusWindow(windows.find(window => window.appId === appId)?.id || "");
-            return;
-        }
-
+    const handleLaunchApp = (appId: string, centerPosition: boolean = false, context?: AppContext, isPreload: boolean = false) => {
+        // Check if app is available
         const appToLaunch = availableApps.find(app => app.id === appId);
         if (!appToLaunch) return;
+
+        // Check if app is already launched
+        if (launchedAppIds.includes(appId)) {
+            // Focus the existing window instead of launching a new instance
+            const existingWindow = windows.find(window => window.appId === appId);
+            if (existingWindow) {
+                focusWindow(existingWindow.id);
+                
+                // Update context if provided
+                if (context) {
+                    setWindows(prevWindows => 
+                        prevWindows.map(window => 
+                            window.id === existingWindow.id 
+                                ? { ...window, context } 
+                                : window
+                        )
+                    );
+                }
+            }
+            return;
+        }
 
         const newWindowId = `window-${appId}-${Date.now()}`;
         const newZIndex = highestZIndex + 1;
@@ -128,12 +146,29 @@ export default function Desktop({ preloadApp }: DesktopProps) {
             initialY = Math.floor(Math.random() * (maxY - padding)) + padding;
         }
 
-        // Create new window
+        // Create the app props with onLaunchApp to allow app to launch other apps
+        const appProps = {
+            context: context,
+            onLaunchApp: (childAppId: string, childCenterPosition?: boolean, childContext?: AppContext) => {
+                // Allow apps to launch other apps and pass context
+                handleLaunchApp(
+                    childAppId, 
+                    childCenterPosition || false, 
+                    childContext ? {
+                        ...childContext,
+                        source: appId // Add source info
+                    } : undefined
+                );
+            },
+            onClose: () => handleCloseWindow(newWindowId)
+        };
+
+        // Create new window with dynamic content
         const newWindow: WindowInstance = {
             id: newWindowId,
             appId: appToLaunch.id,
             title: appToLaunch.title,
-            content: appToLaunch.component,
+            content: appToLaunch.getComponent(appProps),
             zIndex: newZIndex,
             isMaximized: false,
             isFocused: true,
@@ -141,7 +176,8 @@ export default function Desktop({ preloadApp }: DesktopProps) {
             initialY,
             width: windowWidth,
             height: windowHeight,
-            isPreloadApp: isPreload
+            isPreloadApp: isPreload,
+            context: context
         };
 
         // Update windows state - unfocus all other windows and add new one
@@ -192,9 +228,10 @@ export default function Desktop({ preloadApp }: DesktopProps) {
     // Add useEffect to preload app on mount if specified
     useEffect(() => {
         if (preloadApp && startupPhase === 'complete') {
-            handleLaunchApp(preloadApp, true, true);
+            handleLaunchApp(preloadApp, true, initialContext, true);
         }
-    }, [preloadApp, startupPhase]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [preloadApp, startupPhase, initialContext]); // eslint-disable-line react-hooks/exhaustive-deps
+    
     const [isRedirecting, setIsRedirecting] = useState(false);
     // If the user is on a mobile device, 1. close all windows, 2. redirect to /{focusedId}
     useEffect(() => {
@@ -208,6 +245,7 @@ export default function Desktop({ preloadApp }: DesktopProps) {
             router.push(`/${appId}`);
         }
     }, [screenDimensions]);
+
     return (
         <div className="fixed inset-0 overflow-hidden">
             <motion.div
@@ -270,6 +308,14 @@ export default function Desktop({ preloadApp }: DesktopProps) {
                 onLaunchApp={handleLaunchApp}
                 startupPhase={startupPhase}
             />
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: startupPhase === 'complete' || startupPhase === 'launcher' ? 1 : 0 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+
+            >
+                <DesktopFile />   
+            </motion.div>
         </div>
     );
 }

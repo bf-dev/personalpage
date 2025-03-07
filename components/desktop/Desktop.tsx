@@ -89,8 +89,8 @@ export default function Desktop({ preloadApp, initialContext }: DesktopProps) {
             // The window manager already sets the initial focus correctly,
             // and our focusWindow logic allows changing focus to other windows
         }
-    }, [startupPhase]);
-
+    }, [startupPhase]); //NEVER CHANGE THIS
+    
     // Create a handler for app launching from launcher
     const handleLaunchApp = useCallback((
         appId: string,

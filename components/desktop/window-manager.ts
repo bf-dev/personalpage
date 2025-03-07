@@ -12,6 +12,9 @@ export const useWindowManager = (screenDimensions: { width: number; height: numb
   
   // Use a ref to track app loading status and prevent duplicates during concurrent operations
   const appLoadingRef = useRef<Record<string, boolean>>({});
+  
+  // Add a flag to track focus operations in progress
+  const focusOperationInProgress = useRef(false);
 
   // Get launched app IDs
   const getLaunchedAppIds = useCallback(() => {
@@ -47,6 +50,9 @@ export const useWindowManager = (screenDimensions: { width: number; height: numb
       appLoadingRef.current[appId] = false;
     }, 500);
 
+    // Set focus operation flag to prevent concurrent focus operations
+    focusOperationInProgress.current = true;
+
     setWindows(prevWindows => {
       // Check if app is already launched
       const existingWindowIndex = prevWindows.findIndex(window => window.appId === appId);
@@ -55,6 +61,11 @@ export const useWindowManager = (screenDimensions: { width: number; height: numb
         // Focus the existing window instead of launching a new instance
         const newZIndex = highestZIndex + 1;
         setHighestZIndex(newZIndex);
+        
+        // Clear focus operation flag after state update
+        setTimeout(() => {
+          focusOperationInProgress.current = false;
+        }, 100);
         
         return prevWindows.map((window, index) => 
           index === existingWindowIndex 
@@ -96,7 +107,7 @@ export const useWindowManager = (screenDimensions: { width: number; height: numb
 
         const newZIndex = highestZIndex + 1;
         setHighestZIndex(newZIndex);
-
+        
         // Create new window with dynamic content
         const newWindow = createWindowInstance(
           appToLaunch.id,
@@ -111,6 +122,11 @@ export const useWindowManager = (screenDimensions: { width: number; height: numb
           appContext
         );
 
+        // Clear focus operation flag after state update
+        setTimeout(() => {
+          focusOperationInProgress.current = false;
+        }, 100);
+
         // Unfocus all other windows and add new one
         return [...prevWindows.map(window => ({
           ...window,
@@ -118,6 +134,8 @@ export const useWindowManager = (screenDimensions: { width: number; height: numb
         })), newWindow];
       } catch (error) {
         console.error(`Error launching app ${appId}:`, error);
+        // Clear focus operation flag on error
+        focusOperationInProgress.current = false;
         // Return unchanged state on error
         return prevWindows;
       }
@@ -140,11 +158,28 @@ export const useWindowManager = (screenDimensions: { width: number; height: numb
     );
   }, []);
 
-  // Focus a window
+  // Focus a window with debounce to prevent multiple rapid focus changes
   const focusWindow = useCallback((windowId: string) => {
     if (!windowId) return;
-
+    
+    // Skip if another focus operation is in progress
+    if (focusOperationInProgress.current) {
+      console.debug("Skipping focus operation due to another in progress");
+      return;
+    }
+    
+    // Set focus operation flag
+    focusOperationInProgress.current = true;
+    
+    console.debug("focus window", windowId);
+    
     setWindows(prevWindows => {
+      // If window is already focused, just update the flag and return unchanged
+      if (prevWindows.some(window => window.id === windowId && window.isFocused)) {
+        focusOperationInProgress.current = false;
+        return prevWindows;
+      }
+      
       const newZIndex = highestZIndex + 1;
       setHighestZIndex(newZIndex);
       
@@ -154,6 +189,12 @@ export const useWindowManager = (screenDimensions: { width: number; height: numb
         isFocused: window.id === windowId
       }));
     });
+    
+    // Clear focus operation flag after a short delay
+    setTimeout(() => {
+      focusOperationInProgress.current = false;
+    }, 100);
+    
   }, [highestZIndex]);
 
   // Close all windows
@@ -171,4 +212,4 @@ export const useWindowManager = (screenDimensions: { width: number; height: numb
     focusWindow,
     closeAllWindows
   };
-}; 
+};

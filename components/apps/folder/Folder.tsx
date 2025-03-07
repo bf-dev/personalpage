@@ -17,18 +17,14 @@ export default function Folder({ appIds = [], title = "Applications", onLaunchAp
     
     return (
         <div className="h-full w-full flex flex-col">
-            <div className="p-2 border-b border-white/10">
-                <h2 className="text-lg font-medium">{title}</h2>
-            </div>
-            
             <div className="flex-1 p-4 overflow-auto">
-                <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-3'} gap-4`}>
+                <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-4'} gap-4`}>
                     {folderApps.map(app => {
                         const Icon = LucideIcons[app.icon];
                         return (
                             <motion.button
                                 key={app.id}
-                                className="flex flex-col items-center justify-center p-3 rounded-lg bg-black/40 hover:bg-white/10 transition-all"
+                                className="flex flex-col items-center justify-center p-3 rounded-lg bg-black/10 hover:bg-white/10 transition-all"
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => onLaunchApp && onLaunchApp(app.id, true)}

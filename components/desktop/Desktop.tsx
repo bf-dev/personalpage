@@ -1,157 +1,109 @@
 "use client"
-import { useState, useEffect } from "react";
+import { useEffect, useCallback, useMemo, Suspense } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import DesktopWindow from "./DesktopWindow";
 import DesktopLauncher from "./DesktopLauncher";
 import DesktopStatus from "./DesktopStatus";
 import { AppList } from "@/components/apps/AppList";
 import { useRouter } from "next/navigation";
-import DesktopFile from "./DesktopFile";
 import type { AppContext } from "@/components/apps/AppList";
+import { DesktopProps } from "./types";
+import { useScreenDimensions, useStartupAnimation, useMobileRedirect } from "./hooks";
+import { useWindowManager } from "./window-manager";
 
-// Define the window interface with additional properties for focus and animations
-interface WindowInstance {
-    id: string;
-    appId: string;
-    title: string;
-    content: React.ReactNode;
-    zIndex: number;
-    isMaximized: boolean;
-    isFocused: boolean;
-    initialX: number;
-    initialY: number;
-    width: number;
-    height: number;
-    isPreloadApp: boolean;
-    // Add context for inter-app communication
-    context?: AppContext;
-}
-
-interface DesktopProps {
-    preloadApp?: string; // Optional prop to preload an app on component mount
-    initialContext?: AppContext; // Optional initial context for the preloaded app
-}
+// Loading fallback for desktop window content
+const WindowLoadingFallback = () => (
+    <div className="flex items-center justify-center h-full w-full bg-black/30 text-white/50">
+        <div className="animate-pulse">Loading...</div>
+    </div>
+);
 
 export default function Desktop({ preloadApp, initialContext }: DesktopProps) {
     const router = useRouter();
-    const [screenDimensions, setScreenDimensions] = useState({
-        width: typeof window !== 'undefined' ? window.innerWidth : 1200,
-        height: typeof window !== 'undefined' ? window.innerHeight : 800,
-    });
+    
+    // Use our custom hooks
+    const screenDimensions = useScreenDimensions();
+    const startupPhase = useStartupAnimation();
+    
+    // Use window manager for window state
+    const {
+        windows,
+        getLaunchedAppIds,
+        getFocusedWindow,
+        launchApp,
+        closeWindow,
+        toggleMaximize,
+        focusWindow,
+        closeAllWindows
+    } = useWindowManager(screenDimensions);
 
-    // Define available apps
-    const availableApps = AppList;
+    // Calculate launched app IDs - memoized to prevent unnecessary calculations
+    const launchedAppIds = useMemo(() => getLaunchedAppIds(), [getLaunchedAppIds]);
+    
+    // Get current focused window title for status bar - memoized
+    const currentWindowTitle = useMemo(() => {
+        const focusedWindow = getFocusedWindow();
+        return focusedWindow?.title || 'Desktop';
+    }, [getFocusedWindow]);
 
-    // Launched windows state
-    const [windows, setWindows] = useState<WindowInstance[]>([]);
+    // Get redirect path for mobile
+    const getRedirectPath = useCallback(() => {
+        const focusedWindow = getFocusedWindow();
+        return `/${focusedWindow?.appId || "chat"}`;
+    }, [getFocusedWindow]);
 
-    // Keep track of highest z-index to ensure newly focused windows are on top
-    const [highestZIndex, setHighestZIndex] = useState(1);
+    // Handle mobile redirect
+    const handleMobileRedirect = useCallback(() => {
+        const redirectPath = getRedirectPath();
+        router.prefetch(redirectPath);
+        closeAllWindows();
+        router.push(redirectPath);
+    }, [router, getRedirectPath, closeAllWindows]);
 
-    // Add startup animation state
-    const [startupPhase, setStartupPhase] = useState<'initial' | 'background' | 'launcher' | 'complete'>('initial');
+    // Use our mobile redirect hook
+    useMobileRedirect(screenDimensions, getRedirectPath, handleMobileRedirect);
 
-    // Calculate launched app IDs from windows
-    const launchedAppIds = windows.map(window => window.appId);
-
+    // Update the preload app useEffect
     useEffect(() => {
-        // Function to update screen dimensions
-        const updateDimensions = () => {
-            setScreenDimensions({
-                width: window.innerWidth,
-                height: window.innerHeight,
-            });
-        };
-
-        // Set dimensions on initial load
-        updateDimensions();
-
-        // Add event listener for window resize
-        window.addEventListener('resize', updateDimensions);
-
-        // Clean up event listener on component unmount
-        return () => window.removeEventListener('resize', updateDimensions);
-    }, []);
-
-    // Startup animation sequence
-    useEffect(() => {
-        // Start the animation sequence
-        const animationSequence = async () => {
-            // First phase - background appears
-            setStartupPhase('background');
-
-            // Second phase - launcher appears
-            setTimeout(() => {
-                setStartupPhase('launcher');
-            }, 600);
-
-            // Final phase - everything is loaded
-            setTimeout(() => {
-                setStartupPhase('complete');
-            }, 1200);
-        };
-
-        animationSequence();
-    }, []);
-
-    // Handle launching an app
-    const handleLaunchApp = (appId: string, centerPosition: boolean = false, context?: AppContext, isPreload: boolean = false) => {
-        // Check if app is available
-        const appToLaunch = availableApps.find(app => app.id === appId);
-        if (!appToLaunch) return;
-
-        // Check if app is already launched
-        if (launchedAppIds.includes(appId)) {
-            // Focus the existing window instead of launching a new instance
-            const existingWindow = windows.find(window => window.appId === appId);
-            if (existingWindow) {
-                focusWindow(existingWindow.id);
-                
-                // Update context if provided
-                if (context) {
-                    setWindows(prevWindows => 
-                        prevWindows.map(window => 
-                            window.id === existingWindow.id 
-                                ? { ...window, context } 
-                                : window
-                        )
+        if (preloadApp && startupPhase === 'complete') {
+            // Create props factory to handle inter-app communication
+            const createAppProps = (windowId: string) => ({
+                context: initialContext,
+                onLaunchApp: (childAppId: string, childCenterPosition?: boolean, childContext?: AppContext) => {
+                    // Allow apps to launch other apps and pass context
+                    launchApp(
+                        childAppId, 
+                        childCenterPosition || false, 
+                        childContext ? {
+                            ...childContext,
+                            source: preloadApp // Add source info
+                        } : undefined
                     );
-                }
-            }
-            return;
+                },
+                onClose: () => closeWindow(windowId)
+            });
+            
+            // Launch the preload app with initial focus, but allow it to be unfocused later
+            launchApp(preloadApp, true, initialContext, true, createAppProps);
+            
+            // The window manager already sets the initial focus correctly,
+            // and our focusWindow logic allows changing focus to other windows
         }
+    }, [startupPhase]);
 
-        const newWindowId = `window-${appId}-${Date.now()}`;
-        const newZIndex = highestZIndex + 1;
-
-        // Use app-specific width/height if provided, otherwise default values
-        const windowWidth = appToLaunch.width || 400;
-        const windowHeight = appToLaunch.height || 300;
-
-        // Position based on whether we want to center the window
-        let initialX, initialY;
-
-        if (centerPosition) {
-            // Center the window in the screen
-            initialX = (screenDimensions.width - windowWidth) / 2;
-            initialY = (screenDimensions.height - windowHeight) / 2;
-        } else {
-            // Generate random position within the visible screen area
-            // Ensure windows don't spawn too close to edges
-            const padding = 50;
-            const maxX = screenDimensions.width - windowWidth - padding;
-            const maxY = screenDimensions.height - windowHeight - padding;
-
-            initialX = Math.floor(Math.random() * (maxX - padding)) + padding;
-            initialY = Math.floor(Math.random() * (maxY - padding)) + padding;
-        }
-
-        // Create the app props with onLaunchApp to allow app to launch other apps
-        const appProps = {
-            context: context,
+    // Create a handler for app launching from launcher
+    const handleLaunchApp = useCallback((
+        appId: string,
+        centerPosition: boolean = false,
+        context?: AppContext,
+        isPreload: boolean = false
+    ) => {
+        // Create props factory to handle inter-app communication
+        const createAppProps = (windowId: string) => ({
+            context,
             onLaunchApp: (childAppId: string, childCenterPosition?: boolean, childContext?: AppContext) => {
                 // Allow apps to launch other apps and pass context
-                handleLaunchApp(
+                launchApp(
                     childAppId, 
                     childCenterPosition || false, 
                     childContext ? {
@@ -160,162 +112,78 @@ export default function Desktop({ preloadApp, initialContext }: DesktopProps) {
                     } : undefined
                 );
             },
-            onClose: () => handleCloseWindow(newWindowId)
-        };
-
-        // Create new window with dynamic content
-        const newWindow: WindowInstance = {
-            id: newWindowId,
-            appId: appToLaunch.id,
-            title: appToLaunch.title,
-            content: appToLaunch.getComponent(appProps),
-            zIndex: newZIndex,
-            isMaximized: false,
-            isFocused: true,
-            initialX,
-            initialY,
-            width: windowWidth,
-            height: windowHeight,
-            isPreloadApp: isPreload,
-            context: context
-        };
-
-        // Update windows state - unfocus all other windows and add new one
-        setWindows(prevWindows =>
-            [...prevWindows.map(window => ({
-                ...window,
-                isFocused: false
-            })), newWindow]
-        );
-
-        // Update highest z-index
-        setHighestZIndex(newZIndex);
-    };
-
-    // Handle closing a window
-    const handleCloseWindow = (windowId: string) => {
-        setWindows(prevWindows => prevWindows.filter(window => window.id !== windowId));
-    };
-
-    // Handle maximizing a window
-    const handleMaximizeWindow = (windowId: string) => {
-        setWindows(prevWindows =>
-            prevWindows.map(window =>
-                window.id === windowId
-                    ? { ...window, isMaximized: !window.isMaximized }
-                    : window
-            )
-        );
-    };
-
-    // Handle focusing a window
-    const focusWindow = (windowId: string) => {
-        if (!windowId) return;
-
-        const newZIndex = highestZIndex + 1;
-
-        setWindows(prevWindows =>
-            prevWindows.map(window => ({
-                ...window,
-                zIndex: window.id === windowId ? newZIndex : window.zIndex,
-                isFocused: window.id === windowId
-            }))
-        );
-
-        setHighestZIndex(newZIndex);
-    };
-
-    // Add useEffect to preload app on mount if specified
-    useEffect(() => {
-        if (preloadApp && startupPhase === 'complete') {
-            handleLaunchApp(preloadApp, true, initialContext, true);
-        }
-    }, [preloadApp, startupPhase, initialContext]); // eslint-disable-line react-hooks/exhaustive-deps
-    
-    const [isRedirecting, setIsRedirecting] = useState(false);
-    // If the user is on a mobile device, 1. close all windows, 2. redirect to /{focusedId}
-    useEffect(() => {
-        if (typeof window !== 'undefined' && screenDimensions.width < 768) {
-            setStartupPhase('initial');
-            if (isRedirecting) return;
-            setIsRedirecting(true);
-            const appId = windows.find(window => window.isFocused)?.appId || "chat"
-            router.prefetch(`/${appId}`);
-            setWindows([]);
-            router.push(`/${appId}`);
-        }
-    }, [screenDimensions]);
+            onClose: () => closeWindow(windowId)
+        });
+        
+        launchApp(appId, centerPosition, context, isPreload, createAppProps);
+        
+    }, [launchApp, closeWindow]);
 
     return (
         <div className="fixed inset-0 overflow-hidden">
-            <motion.div
+            {/* Desktop background */}
+            {/* Helpful text overlay */}
+            <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: startupPhase === 'complete' || startupPhase === 'launcher' ? 1 : 0 }}
                 transition={{ duration: 0.5, ease: "easeOut" }}
                 className="absolute right-5 text-sm rounded-sm top-10 bg-black/10 backdrop-blur-lg text-white/80 p-2"
-
             >
                 Drag the window to the top edge to maximize it, or to the bottom edge to close it.
             </motion.div>
-            <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{
-                    opacity: startupPhase === 'complete' || startupPhase === 'launcher' ? 1 : 0,
-                    y: startupPhase === 'complete' || startupPhase === 'launcher' ? 0 : 10
-                }}
-                transition={{ duration: 0.5, ease: "easeOut", delay: 0.2 }}
-            >
-                <DesktopStatus currentWindow={windows.find(window => window.isFocused)?.title || "Home"} />
-            </motion.div>
 
+            {/* Desktop status bar (top) */}
+            <DesktopStatus currentWindow={currentWindowTitle} />
+
+            {/* Desktop window instances */}
             <AnimatePresence>
-                {windows.map((window) => (
+                {windows.map(window => (
                     <motion.div
                         key={window.id}
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
+                        initial={
+                            { scale: 0.8, opacity: 0 }
+                        }
+                        animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.8, opacity: 0, y: 100 }}
-                        transition={{ duration: 0.3, ease: "easeOut" }}
+                        transition={{ 
+                            duration:  0.3, 
+                            ease: "easeOut" 
+                        }}
                         style={{ zIndex: window.zIndex }}
                     >
                         <DesktopWindow
                             width={window.width}
                             height={window.height}
-                            screenWidth={screenDimensions.width}
-                            screenHeight={screenDimensions.height}
-                            onClose={() => handleCloseWindow(window.id)}
-                            onMaximize={() => handleMaximizeWindow(window.id)}
-                            onFocus={() => focusWindow(window.id)}
                             initialX={window.initialX}
                             initialY={window.initialY}
-                            isPreloadApp={window.isPreloadApp}
-                            style={{
+                            screenWidth={screenDimensions.width}
+                            screenHeight={screenDimensions.height}
+                            onClose={() => closeWindow(window.id)}
+                            onMaximize={() => toggleMaximize(window.id)}
+                            onFocus={() => focusWindow(window.id)}
+                            style={{ 
+                                zIndex: window.zIndex,
+                                boxShadow: window.isFocused ? '0 0 20px rgba(0, 0, 0, 0.5)' : 'none',
                                 backgroundColor: window.isFocused
                                     ? "rgba(0, 0, 0, 0.7)" // 10% darker when focused
-                                    : "rgba(0, 0, 0, 0.6)",
-                                zIndex: window.zIndex
+                                    : "rgba(0, 0, 0, 0.6)"
                             }}
                         >
-                            {window.content}
+                            <Suspense fallback={<WindowLoadingFallback />}>
+                                {window.content}
+                            </Suspense>
                         </DesktopWindow>
                     </motion.div>
                 ))}
             </AnimatePresence>
 
-            <DesktopLauncher
-                apps={availableApps}
+            {/* App launcher bar */}
+            <DesktopLauncher 
+                apps={AppList} 
                 launchedApps={launchedAppIds}
                 onLaunchApp={handleLaunchApp}
                 startupPhase={startupPhase}
             />
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: startupPhase === 'complete' || startupPhase === 'launcher' ? 1 : 0 }}
-                transition={{ duration: 0.5, ease: "easeOut" }}
-
-            >
-                <DesktopFile />   
-            </motion.div>
         </div>
     );
 }

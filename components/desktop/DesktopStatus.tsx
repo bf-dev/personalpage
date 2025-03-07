@@ -1,22 +1,51 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { AppList } from "../apps/AppList";
+import { DesktopStatusProps } from "./types";
+import { useRouter } from "next/navigation";
 
-export default function DesktopStatus({ currentWindow }: { currentWindow: string }) {
+const DesktopStatus = ({ currentWindow }: DesktopStatusProps) => {
+    const router = useRouter();
     const [datetimeString, setDatetimeString] = useState("");
+    const [appId, setAppId] = useState("");
+    
+    // Update time every second
     useEffect(() => {
-        const interval = setInterval(() => {
-            //format of Thu Mar 6 2:54 PM
-            //get rid of at
-            setDatetimeString(new Date().toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true }).replace("at", "\t"));
-        }, 1000);
+        const updateDateTime = () => {
+            setDatetimeString(
+                new Date().toLocaleString('en-US', { 
+                    weekday: 'short', 
+                    month: 'short', 
+                    day: 'numeric', 
+                    hour: 'numeric', 
+                    minute: 'numeric', 
+                    hour12: true 
+                }).replace("at", "\t")
+            );
+        };
+        
+        // Update immediately and then every second
+        updateDateTime();
+        const interval = setInterval(updateDateTime, 1000);
         return () => clearInterval(interval);
     }, []);
-    const [appId, setAppId] = useState("");
+
+    // Find app ID when currentWindow changes
     useEffect(() => {
         setAppId(AppList.find(app => app.title === currentWindow)?.id || "");
     }, [currentWindow]);
+    
+    // Handle exit desktop click - use router for programmatic navigation
+    const handleExitDesktop = useCallback(() => {
+        if (appId) {
+            router.push(`/${appId}`);
+        } else {
+            // Fallback to chat app if no app ID found
+            router.push('/chat');
+        }
+    }, [appId, router]);
+
     return (
         <motion.div
             className="absolute flex px-3 py-1 text-xs text-white top-0 w-screen bg-black/40 backdrop-blur-2xl gap-x-3"
@@ -42,17 +71,22 @@ export default function DesktopStatus({ currentWindow }: { currentWindow: string
                     {currentWindow}
                 </strong>
             </div>
-            <div>
-                <Link href={`/${appId}`}>
-                    <p>Exit Desktop</p>
-                </Link>
-            </div>
-            <div className="flex-1">
-
-            </div>
+            {appId && (
+                <div>
+                    <button 
+                        onClick={handleExitDesktop}
+                        className="hover:text-white/70"
+                    >
+                        Exit Desktop
+                    </button>
+                </div>
+            )}
+            <div className="flex-1" />
             <div>
                 <p>{datetimeString}</p>
             </div>
         </motion.div>
-    )
-}
+    );
+};
+
+export default memo(DesktopStatus);

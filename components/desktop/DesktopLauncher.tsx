@@ -1,20 +1,22 @@
-import { useState } from 'react';
+import { memo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import * as LucideIcons from 'lucide-react';
-import { AppDefinition, AppContext } from '../apps/AppList';
+import { DesktopLauncherProps } from './types';
+import { AppContext } from '../apps/AppList';
 
-// Define available applications
-
-interface DesktopLauncherProps {
-  apps: AppDefinition[];
-  launchedApps: string[];
-  onLaunchApp: (appId: string, centerPosition?: boolean, context?: AppContext, isPreload?: boolean) => void;
-  startupPhase: 'initial' | 'background' | 'launcher' | 'complete';
-}
-
-export default function DesktopLauncher({ apps, launchedApps, onLaunchApp, startupPhase }: DesktopLauncherProps) {
+const DesktopLauncher = ({ 
+  apps, 
+  launchedApps, 
+  onLaunchApp, 
+  startupPhase 
+}: DesktopLauncherProps) => {
   // Filter visible apps - only display non-hidden apps or already launched apps
   const visibleApps = apps.filter(app => !app.isHidden || launchedApps.includes(app.id));
+  
+  // Memoized app launcher callback
+  const createAppLaunchHandler = useCallback((appId: string) => () => {
+    onLaunchApp(appId);
+  }, [onLaunchApp]);
   
   return (
     <div className="fixed bottom-0 left-0 w-full flex justify-center items-center pb-4 pointer-events-none">
@@ -44,7 +46,7 @@ export default function DesktopLauncher({ apps, launchedApps, onLaunchApp, start
                 }`}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => onLaunchApp(app.id)}
+                onClick={createAppLaunchHandler(app.id)}
                 title={app.title}
               >
                 {/* @ts-ignore - Dynamic icon component from Lucide */}
@@ -56,4 +58,6 @@ export default function DesktopLauncher({ apps, launchedApps, onLaunchApp, start
       </motion.div>
     </div>
   );
-}
+};
+
+export default memo(DesktopLauncher);

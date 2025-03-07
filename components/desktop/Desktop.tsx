@@ -202,7 +202,7 @@ export default function Desktop({ preloadApp }: DesktopProps) {
             setStartupPhase('initial');
             if (isRedirecting) return;
             setIsRedirecting(true);
-            const appId = windows[0]?.appId || "chat"
+            const appId = windows.find(window => window.isFocused)?.appId || "chat"
             router.prefetch(`/${appId}`);
             setWindows([]);
             router.push(`/${appId}`);

@@ -9,6 +9,7 @@ import Desktop from "@/components/desktop/Desktop";
 export default function MobileLayout({ children }: { children: React.ReactNode }) {
     const [screenWidth, setScreenWidth] = useState(0);
     const [isDesktop, setIsDesktop] = useState(false);
+    const [isRedirecting, setIsRedirecting] = useState(false);
     const pathname = usePathname();
     const router = useRouter();
 
@@ -25,6 +26,8 @@ export default function MobileLayout({ children }: { children: React.ReactNode }
     useEffect(() => {
         if (screenWidth > 768) {
             const appId = pathname.split("/").pop();
+            if (isRedirecting) return;
+            setIsRedirecting(true)
             router.prefetch(`/desktop?preloadApp=${appId}`);
             setTimeout(() => {
                 setIsDesktop(true);

@@ -7,6 +7,7 @@ import { Code, FileText, Terminal, Settings } from "lucide-react";
 import DesktopStatus from "./DesktopStatus";
 import ChatInteraction from "@/components/apps/chat/Chat";
 import { AppList } from "@/components/apps/AppList";
+import { useRouter } from "next/navigation";
 // Define the window interface with additional properties for focus and animations
 interface WindowInstance {
     id: string;
@@ -28,10 +29,12 @@ interface DesktopProps {
 }
 
 export default function Desktop({ preloadApp }: DesktopProps) {
+    const router = useRouter();
     const [screenDimensions, setScreenDimensions] = useState({
         width: typeof window !== 'undefined' ? window.innerWidth : 1200,
         height: typeof window !== 'undefined' ? window.innerHeight : 800,
     });
+
 
     // Define available apps
     const availableApps = AppList;
@@ -192,13 +195,25 @@ export default function Desktop({ preloadApp }: DesktopProps) {
             handleLaunchApp(preloadApp, true, true);
         }
     }, [preloadApp, startupPhase]); // eslint-disable-line react-hooks/exhaustive-deps
-
+    const [isRedirecting, setIsRedirecting] = useState(false);
+    // If the user is on a mobile device, 1. close all windows, 2. redirect to /{focusedId}
+    useEffect(() => {
+        if (typeof window !== 'undefined' && screenDimensions.width < 768) {
+            setStartupPhase('initial');
+            if (isRedirecting) return;
+            setIsRedirecting(true);
+            const appId = windows[0]?.appId || "chat"
+            router.prefetch(`/${appId}`);
+            setWindows([]);
+            router.push(`/${appId}`);
+        }
+    }, [screenDimensions]);
     return (
         <div className="fixed inset-0 overflow-hidden">
             <motion.div
                 initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, ease: "easeOut", delay: 1 }}
+                animate={{ opacity: startupPhase === 'complete' || startupPhase === 'launcher' ? 1 : 0 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
                 className="absolute right-5 text-sm rounded-sm top-10 bg-black/10 backdrop-blur-lg text-white/80 p-2"
 
             >

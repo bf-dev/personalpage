@@ -10,6 +10,7 @@ import type { AppContext } from "@/components/apps/AppList";
 import { DesktopProps } from "./types";
 import { useScreenDimensions, useStartupAnimation, useMobileRedirect } from "./hooks";
 import { useWindowManager } from "./window-manager";
+import DesktopIcons from "./DesktopIcons";
 
 // Loading fallback for desktop window content
 const WindowLoadingFallback = () => (
@@ -131,7 +132,13 @@ export default function Desktop({ preloadApp, initialContext }: DesktopProps) {
             >
                 Drag the window to the top edge to maximize it, or to the bottom edge to close it.
             </motion.div>
-
+            <DesktopIcons 
+                apps={AppList}
+                launchedApps={launchedAppIds}
+                onLaunchApp={handleLaunchApp}
+                screenWidth={screenDimensions.width}
+                screenHeight={screenDimensions.height}
+            />
             {/* Desktop status bar (top) */}
             <DesktopStatus currentWindow={currentWindowTitle} />
 

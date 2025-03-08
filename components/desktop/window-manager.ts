@@ -8,7 +8,7 @@ import { createWindowInstance, calculateWindowPosition } from './utils';
  */
 export const useWindowManager = (screenDimensions: { width: number; height: number }) => {
   const [windows, setWindows] = useState<WindowInstance[]>([]);
-  const [highestZIndex, setHighestZIndex] = useState(1);
+  const [highestZIndex, setHighestZIndex] = useState(10);
   
   // Use a ref to track app loading status and prevent duplicates during concurrent operations
   const appLoadingRef = useRef<Record<string, boolean>>({});

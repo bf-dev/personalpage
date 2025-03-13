@@ -4,9 +4,10 @@ import { useDeviceDetect } from '@/components/hooks/useDeviceDetect';
 
 interface FolderProps extends AppProps {
 	appIds?: string[];
+	title?: string;
 }
 
-export default function Folder({ appIds = [], onLaunchApp }: FolderProps) {
+export default function Folder({ appIds = [], title, onLaunchApp }: FolderProps) {
 	// Filter apps from the AppList based on the provided appIds
 	const folderApps = AppList.filter(app => appIds.includes(app.id));
 
@@ -15,6 +16,11 @@ export default function Folder({ appIds = [], onLaunchApp }: FolderProps) {
 
 	return (
 		<div className="h-full w-full flex flex-col">
+			{title && (
+				<div className="px-4 py-2 text-white/70">
+					<h2 className="text-lg font-medium">{title}</h2>
+				</div>
+			)}
 			<div className="flex-1 p-4 overflow-auto">
 				<div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-4'} gap-4`}>
 					{folderApps.map(app => {

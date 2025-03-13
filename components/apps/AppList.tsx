@@ -6,16 +6,16 @@ import {
 	Flag as FlagIcon,
 	Keyboard,
 	TreePalm,
-	Folder,
+	Folder as FolderIcon,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import Folder from './folder/Folder';
+import Image from 'next/image';
 
 // Dynamically import app components
 const About = lazy(() => import('./about/About'));
 const ChatInteraction = lazy(() => import('./chat/Chat'));
 const Typewriter = lazy(() => import('./typewriter/Typewriter'));
-const FolderComponent = lazy(() => import('./folder/Folder'));
-import Image from 'next/image';
 
 // Context type for inter-app communication
 export interface AppContext {
@@ -42,7 +42,6 @@ const withAppProps = <T extends object>(Component: ComponentType<T>) => {
 const AppAbout = withAppProps(About);
 const AppChat = withAppProps(ChatInteraction);
 const AppTypewriter = withAppProps(Typewriter);
-const AppFolder = withAppProps(FolderComponent);
 
 export interface AppDefinition {
 	id: string;
@@ -187,12 +186,12 @@ export const AppList: AppDefinition[] = [
 	{
 		id: 'all-apps',
 		title: 'All Apps',
-		icon: Folder,
+		icon: FolderIcon,
 		width: 500,
 		height: 550,
 		getComponent: (props: AppProps) => (
 			<Suspense fallback={<LoadingFallback />}>
-				<AppFolder
+				<Folder
 					{...props}
 					appIds={['flag', 'kitten', 'thoughts', 'typewriter']}
 					title="All Applications"

@@ -21,7 +21,7 @@ const DesktopStatus = ({ currentWindow }: DesktopStatusProps) => {
                     hour: 'numeric', 
                     minute: 'numeric', 
                     hour12: true 
-                }).replace("at", "\t")
+                })
             );
         };
         

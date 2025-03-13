@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 import { useRouter, usePathname } from 'next/navigation';
-import { motion } from "framer-motion"
+import { motion } from 'framer-motion';
 const menuItems = [
 	{ label: 'main', href: '/' },
 	{ label: 'about', href: '/about' },
@@ -42,15 +42,18 @@ export default function CompactMenu() {
 	}, [pathname]);
 
 	return (
-		<motion.div className="fixed bottom-0 left-0 right-0 p-4 z-50" exit={{
-			bottom: -100
-		}}
+		<motion.div
+			className="fixed bottom-0 left-0 right-0 p-4 z-50"
+			exit={{
+				bottom: -100,
+			}}
 			initial={{ bottom: -100 }}
 			animate={{ bottom: 0 }}
 			transition={{
 				duration: 0.3,
-				ease: "backInOut"
-			}}>
+				ease: 'backInOut',
+			}}
+		>
 			<nav
 				className="flex items-center justify-center space-x-1 rounded-full bg-gray-800/20 backdrop-blur-lg p-2 mx-auto 
         max-w-fit shadow-[inset_0_0_5px_#ffffff30] relative

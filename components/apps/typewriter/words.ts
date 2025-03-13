@@ -151,21 +151,20 @@ export const typewriter_words = [
 	'epic',
 ];
 
-
 export function generateRandomText() {
-    const selectedWords = [];
-    const wordCount = 20;
-    const availableWords = [...typewriter_words]; // Create a copy to avoid modifying original
+	const selectedWords = [];
+	const wordCount = 20;
+	const availableWords = [...typewriter_words]; // Create a copy to avoid modifying original
 
-    while (availableWords.length < wordCount) {
-        availableWords.push(...typewriter_words);
-    }
+	while (availableWords.length < wordCount) {
+		availableWords.push(...typewriter_words);
+	}
 
-    for (let i = 0; i < wordCount; i++) {
-        const randomIndex = Math.floor(Math.random() * availableWords.length);
-        selectedWords.push(availableWords[randomIndex]);
-        availableWords.splice(randomIndex, 1);
-    }
+	for (let i = 0; i < wordCount; i++) {
+		const randomIndex = Math.floor(Math.random() * availableWords.length);
+		selectedWords.push(availableWords[randomIndex]);
+		availableWords.splice(randomIndex, 1);
+	}
 
-    return selectedWords.join(' ');
+	return selectedWords.join(' ');
 }

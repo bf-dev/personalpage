@@ -62,7 +62,7 @@ export default function ContactsList() {
 						transition={{
 							duration: 0.7,
 							delay: index * 0.1,
-							ease: "easeOut"
+							ease: 'easeOut',
 						}}
 					>
 						<Link

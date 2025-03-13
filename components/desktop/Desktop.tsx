@@ -12,7 +12,6 @@ import { useScreenDimensions, useStartupAnimation, useMobileRedirect } from './h
 import { useWindowManager } from './window-manager';
 import DesktopIcons from './DesktopIcons';
 
-// Loading fallback for desktop window content
 const WindowLoadingFallback = () => (
 	<div className="flex items-center justify-center h-full w-full bg-black/30 text-white/50">
 		<div className="animate-pulse">Loading...</div>
@@ -22,11 +21,9 @@ const WindowLoadingFallback = () => (
 export default function Desktop({ preloadApp, initialContext }: DesktopProps) {
 	const router = useRouter();
 
-	// Use our custom hooks
 	const screenDimensions = useScreenDimensions();
 	const startupPhase = useStartupAnimation();
 
-	// Use window manager for window state
 	const {
 		windows,
 		getLaunchedAppIds,
@@ -38,22 +35,18 @@ export default function Desktop({ preloadApp, initialContext }: DesktopProps) {
 		closeAllWindows,
 	} = useWindowManager(screenDimensions);
 
-	// Calculate launched app IDs - memoized to prevent unnecessary calculations
 	const launchedAppIds = useMemo(() => getLaunchedAppIds(), [getLaunchedAppIds]);
 
-	// Get current focused window title for status bar - memoized
 	const currentWindowTitle = useMemo(() => {
 		const focusedWindow = getFocusedWindow();
 		return focusedWindow?.title || 'Desktop';
 	}, [getFocusedWindow]);
 
-	// Get redirect path for mobile
 	const getRedirectPath = useCallback(() => {
 		const focusedWindow = getFocusedWindow();
 		return `/${focusedWindow?.appId || 'chat'}`;
 	}, [getFocusedWindow]);
 
-	// Handle mobile redirect
 	const handleMobileRedirect = useCallback(() => {
 		const redirectPath = getRedirectPath();
 		router.prefetch(redirectPath);
@@ -61,13 +54,10 @@ export default function Desktop({ preloadApp, initialContext }: DesktopProps) {
 		router.push(redirectPath);
 	}, [router, getRedirectPath, closeAllWindows]);
 
-	// Use our mobile redirect hook
 	useMobileRedirect(screenDimensions, getRedirectPath, handleMobileRedirect);
 
-	// Update the preload app useEffect
 	useEffect(() => {
 		if (preloadApp && startupPhase === 'complete') {
-			// Create props factory to handle inter-app communication
 			const createAppProps = (windowId: string) => ({
 				context: initialContext,
 				onLaunchApp: (
@@ -75,14 +65,13 @@ export default function Desktop({ preloadApp, initialContext }: DesktopProps) {
 					childCenterPosition?: boolean,
 					childContext?: AppContext
 				) => {
-					// Allow apps to launch other apps and pass context
 					launchApp(
 						childAppId,
 						childCenterPosition || false,
 						childContext
 							? {
 									...childContext,
-									source: preloadApp, // Add source info
+									source: preloadApp,
 								}
 							: undefined
 					);
@@ -90,15 +79,11 @@ export default function Desktop({ preloadApp, initialContext }: DesktopProps) {
 				onClose: () => closeWindow(windowId),
 			});
 
-			// Launch the preload app with initial focus, but allow it to be unfocused later
 			launchApp(preloadApp, true, initialContext, true, createAppProps);
-
-			// The window manager already sets the initial focus correctly,
-			// and our focusWindow logic allows changing focus to other windows
 		}
-	}, [startupPhase, closeWindow, initialContext, launchApp, preloadApp]); //NEVER CHANGE THIS
+		// eslint-disable-next-line
+	}, [startupPhase, preloadApp]);
 
-	// Create a handler for app launching from launcher
 	const handleLaunchApp = useCallback(
 		(
 			appId: string,
@@ -106,7 +91,6 @@ export default function Desktop({ preloadApp, initialContext }: DesktopProps) {
 			context?: AppContext,
 			isPreload: boolean = false
 		) => {
-			// Create props factory to handle inter-app communication
 			const createAppProps = (windowId: string) => ({
 				context,
 				onLaunchApp: (
@@ -114,14 +98,13 @@ export default function Desktop({ preloadApp, initialContext }: DesktopProps) {
 					childCenterPosition?: boolean,
 					childContext?: AppContext
 				) => {
-					// Allow apps to launch other apps and pass context
 					launchApp(
 						childAppId,
 						childCenterPosition || false,
 						childContext
 							? {
 									...childContext,
-									source: appId, // Add source info
+									source: appId,
 								}
 							: undefined
 					);
@@ -188,7 +171,7 @@ export default function Desktop({ preloadApp, initialContext }: DesktopProps) {
 									? '0 0 20px rgba(0, 0, 0, 0.5)'
 									: 'none',
 								backgroundColor: window.isFocused
-									? 'rgba(0, 0, 0, 0.7)' // 10% darker when focused
+									? 'rgba(0, 0, 0, 0.7)'
 									: 'rgba(0, 0, 0, 0.6)',
 							}}
 						>

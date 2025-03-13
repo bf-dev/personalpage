@@ -13,10 +13,8 @@ export default function MobileMenu() {
 	const pathname = usePathname();
 	const [isFolderOpen, setIsFolderOpen] = useState(false);
 	const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
-
-	const visibleApps = AppList.filter(
-		app => !app.isHidden || app.id.includes('folder') || app.icon.name.includes('Folder')
-	);
+	console.log(AppList[0].id);
+	const visibleApps = AppList.filter(app => !app.isHidden && !app.id.includes('folder'));
 
 	return (
 		<nav className="flex flex-col items-center space-y-2 fixed bottom-6 left-0 right-0 z-50 text-white">
@@ -82,7 +80,7 @@ export default function MobileMenu() {
 			<div className="flex items-center justify-center space-x-2 rounded-full bg-black/40 backdrop-blur-lg p-2 shadow-lg">
 				{visibleApps.map(app => {
 					const isActive = pathname === `/${app.id}`;
-					const isFolder = app.id.includes('folder') || app.icon.name.includes('Folder');
+					const isFolder = app.id.includes('folder');
 					const Icon = app.icon;
 
 					return (

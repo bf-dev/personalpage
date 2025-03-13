@@ -154,7 +154,7 @@ export const typewriter_words = [
 export function generateRandomText() {
 	const selectedWords = [];
 	const wordCount = 20;
-	const availableWords = [...typewriter_words]; // Create a copy to avoid modifying original
+	const availableWords = [...typewriter_words];
 
 	while (availableWords.length < wordCount) {
 		availableWords.push(...typewriter_words);

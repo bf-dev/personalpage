@@ -12,12 +12,12 @@ import type { LucideIcon } from 'lucide-react';
 import Folder from './folder/Folder';
 import Image from 'next/image';
 
-// Dynamically import app components
+
 const About = lazy(() => import('./about/About'));
 const ChatInteraction = lazy(() => import('./chat/Chat'));
 const Typewriter = lazy(() => import('./typewriter/Typewriter'));
 
-// Context type for inter-app communication
+
 export interface AppContext {
 	data: Record<string, unknown>;
 	source: string;
@@ -30,15 +30,15 @@ export interface AppProps {
 	onClose?: () => void;
 }
 
-// Higher-Order Component to wrap existing components that don't yet support our props
+
 const withAppProps = <T extends object>(Component: ComponentType<T>) => {
 	return function WrappedComponent(props: T & AppProps) {
-		// We pass all props through, including component-specific ones
+		
 		return <Component {...props} />;
 	};
 };
 
-// Wrapped versions of our components
+
 const AppAbout = withAppProps(About);
 const AppChat = withAppProps(ChatInteraction);
 const AppTypewriter = withAppProps(Typewriter);
@@ -67,7 +67,7 @@ type MenuDefinition = {
 	isHidden?: boolean;
 };
 
-// Loading fallback for lazy-loaded components
+
 const LoadingFallback = () => (
 	<div className="flex items-center justify-center h-full w-full">
 		{/* Empty div for blank loading state */}
@@ -182,7 +182,7 @@ export const AppList: AppDefinition[] = [
 		capabilities: {},
 	},
 
-	// Add Folder app for all hidden apps
+	
 	{
 		id: 'all-apps',
 		title: 'All Apps',

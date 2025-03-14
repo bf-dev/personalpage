@@ -8,10 +8,8 @@ interface FolderProps extends AppProps {
 }
 
 export default function Folder({ appIds = [], title, onLaunchApp }: FolderProps) {
-	
 	const folderApps = AppList.filter(app => appIds.includes(app.id));
 
-	
 	const { isMobile } = useDeviceDetect();
 
 	return (

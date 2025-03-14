@@ -12,11 +12,9 @@ import type { LucideIcon } from 'lucide-react';
 import Folder from './folder/Folder';
 import Image from 'next/image';
 
-
 const About = lazy(() => import('./about/About'));
 const ChatInteraction = lazy(() => import('./chat/Chat'));
 const Typewriter = lazy(() => import('./typewriter/Typewriter'));
-
 
 export interface AppContext {
 	data: Record<string, unknown>;
@@ -30,14 +28,11 @@ export interface AppProps {
 	onClose?: () => void;
 }
 
-
 const withAppProps = <T extends object>(Component: ComponentType<T>) => {
 	return function WrappedComponent(props: T & AppProps) {
-		
 		return <Component {...props} />;
 	};
 };
-
 
 const AppAbout = withAppProps(About);
 const AppChat = withAppProps(ChatInteraction);
@@ -66,7 +61,6 @@ type MenuDefinition = {
 	href: string;
 	isHidden?: boolean;
 };
-
 
 const LoadingFallback = () => (
 	<div className="flex items-center justify-center h-full w-full">
@@ -182,7 +176,6 @@ export const AppList: AppDefinition[] = [
 		capabilities: {},
 	},
 
-	
 	{
 		id: 'all-apps',
 		title: 'All Apps',
